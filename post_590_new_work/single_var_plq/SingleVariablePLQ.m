@@ -3,14 +3,18 @@ classdef SingleVariablePLQ
     %   Detailed explanation goes here
     
     properties
-        Property1
+        f
+        pieces
+        rho
+        new_pieces
     end
     
     methods
-        function obj = SingleVariablePLQ(inputArg1,inputArg2)
+        function obj = SingleVariablePLQ(func, pieces)
             %SINGLEVARIABLEPLQ Construct an instance of this class
             %   Detailed explanation goes here
-            obj.Property1 = inputArg1 + inputArg2;
+            obj.f = func;
+            obj.pieces = pieces;
         end
         
         function outputArg = method1(obj,inputArg)

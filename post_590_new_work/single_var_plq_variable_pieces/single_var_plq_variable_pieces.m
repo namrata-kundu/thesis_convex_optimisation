@@ -113,8 +113,17 @@ for i=1:size(bounds,2)-1
     first_bound_row = linspace(left_bound,right_bound,(num_of_pieces));
     a_row = [f(1,i)*ones(1,(num_of_pieces))]; 
     b_row = [f(2,i)*ones(1,(num_of_pieces))]; 
-    c_row = [f(3,i)*ones(1,(num_of_pieces))]; 
-    new_pieces = [new_pieces first_bound_row];
+    c_row = [f(3,i)*ones(1,(num_of_pieces))];
+    
+%     new_np = cell(num_of_pieces-1,1);
+    new_pieces = [new_pieces, left_bound]; 
+    newp = [];
+    for j = 1:num_of_pieces-1
+        newp = [newp, sdpvar(1,1)];
+    end
+    new_pieces = [new_pieces newp];
+        
+%     new_pieces = [new_pieces first_bound_row];
 %     values = [first_bound_row; a_row; b_row; c_row];
     values = [a_row; b_row; c_row];
     new_f = [new_f values];
@@ -122,6 +131,15 @@ end
 
 new_pieces = [new_pieces right_boundary];
 
+
+%%NEW CODE
+% new_pieces_size = size(new_pieces,2);
+% np = cell(size(new_pieces,2),1);
+% new_pieces = [];
+% for i=1:new_pieces_size
+%   np{i} = sdpvar(1,1); 
+%   new_pieces = [new_pieces np{i}];
+% end
 
 % Allocate sdpvar variables
 a = cell(size(new_f,2),1);
@@ -141,7 +159,7 @@ end
 
 %Find integrals - area using symbolic integrals
 objective = 0;
-syms a_var b_var c_var x
+syms a_var b_var c_var x lb ub
 for i=1:size(new_f,2) %total_number_of_pieces = size(new_f,2);
     af=new_f(1,i);
     bf=new_f(2,i);
@@ -150,10 +168,15 @@ for i=1:size(new_f,2) %total_number_of_pieces = size(new_f,2);
     lower_bound = new_pieces(i);
     upper_bound = new_pieces(i+1);
     symbolic_integral = int(func, [lower_bound upper_bound]);
+    symbolic_integral = int(func, [lb ub]);
     str_symbolic_integral = char(symbolic_integral);
     str_symbolic_integral = strrep(str_symbolic_integral, 'a_var', strcat('a{',num2str(i),'}'));
     str_symbolic_integral = strrep(str_symbolic_integral, 'b_var', strcat('b{',num2str(i),'}'));
     str_symbolic_integral = strrep(str_symbolic_integral, 'c_var', strcat('c{',num2str(i),'}'));
+%     str_symbolic_integral = strrep(str_symbolic_integral, 'lb', strcat('np{',num2str(i),'}'));
+%     str_symbolic_integral = strrep(str_symbolic_integral, 'ub', strcat('np{',num2str(i),'+1}'));
+    str_symbolic_integral = strrep(str_symbolic_integral, 'lb', strcat('new_pieces(',num2str(i),')'));
+    str_symbolic_integral = strrep(str_symbolic_integral, 'ub', strcat('new_pieces(',num2str(i),'+1)'));
     integral = eval(str_symbolic_integral);
     objective = objective + integral;
 end
@@ -212,12 +235,20 @@ end
 
 
 %Feed into solver
-options = sdpsettings('solver','', 'verbose', 1);
+options = sdpsettings('solver','bmibnb', 'verbose', 1);
 sol = optimize(Constraints,objective, options)
 disp(value(objective))
 % visualize(f,bounds(size(bounds,2)),rho,rho(1,size(rho,2)));
+new_pieces = convert_to_values(new_pieces);
 visualize(f,pieces,rho,new_pieces);
 
+
+function val = convert_to_values(new_pieces)
+    val = [];
+    for i=1:size(new_pieces,2)
+        val = [val value(new_pieces(i))];
+    end        
+end
 
 
 

@@ -212,7 +212,7 @@ end
 
 
 %Feed into solver
-options = sdpsettings('solver','', 'verbose', 1);
+options = sdpsettings('solver','bmibnb', 'verbose', 1);
 sol = optimize(Constraints,objective, options)
 disp(value(objective))
 % visualize(f,bounds(size(bounds,2)),rho,rho(1,size(rho,2)));
