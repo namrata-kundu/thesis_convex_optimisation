@@ -118,7 +118,7 @@ function  [g, g_pieces, objective] = get_nearest_convex_function_with_given_numb
         Constraints = [Constraints constraint2];
     end
 
-    options = sdpsettings('solver','baron', 'verbose',1);
+    options = sdpsettings('solver','', 'verbose',1);
     sol = optimize(Constraints,objective, options)
     disp(value(objective));
     objective = value(objective);
